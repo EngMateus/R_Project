@@ -1,0 +1,386 @@
+# instalação libs
+
+```{r}
+install.packages("dplyr")
+```
+
+
+```{r}
+library("dplyr")
+```
+
+
+
+```{r}
+install.packages("ggplot2")
+```
+
+```{r}
+library(ggplot2)
+```
+
+
+```{r}
+install.packages("lubridate")
+```
+
+
+
+```{r}
+library(lubridate)
+```
+
+
+
+
+# Extração dados
+
+```{r}
+df_clientes <- read.delim(file.choose(),sep=";",fileEncoding = "latin1")
+```
+
+```{r}
+df_alugueis <- read.delim(file.choose(),sep=";",fileEncoding = "latin1")
+```
+
+```{r}
+df_atores <- read.delim(file.choose(),sep=";",fileEncoding = "latin1")
+```
+
+
+```{r}
+df_atuacoes <- read.delim(file.choose(),sep=";",fileEncoding = "latin1")
+```
+
+
+```{r}
+df_filmes <- read.delim(file.choose(),sep=";",fileEncoding = "latin1")
+```
+
+
+
+
+
+# Exploração dos dados
+
+```{r}
+conjunto_dados <- list(df_clientes,df_alugueis,df_atores,df_atuacoes,df_filmes)
+
+for (conjunto in conjunto_dados) {
+  print(conjunto)
+}
+
+
+
+# cliente
+# aluguel
+# atores
+# atuações
+# filmes
+
+```
+
+# Validação dados duplicados de clientes
+
+
+```{r}
+# Validando dados duplicados pelo id
+
+validacao_duplicados_clientes <- df_clientes %>% group_by(id_cliente) %>% count()
+
+colnames(validacao_duplicados_clientes)[2] <- "Ocorrencias"
+```
+
+
+```{r}
+validacao_duplicados_clientes
+```
+# Nenhum dado de cliente duplicado, validado pelo id do mesmo
+
+
+
+
+# Exploração visual quantidade de clientes por estado
+
+```{r}
+
+
+freq_estados <- df_clientes %>%
+  count(estado) %>%
+  mutate(n = as.numeric(n))
+
+
+
+
+freq_estados <- df_clientes %>%
+  count(estado) %>%
+  mutate(n = as.numeric(n))
+
+# gráfico de barras horizontal
+ggplot(freq_estados, aes(x = reorder(estado, n), y = n)) +
+  geom_bar(stat = "identity", fill = "darkgray") +
+  labs(title="Quantidade de clientes por estado",
+       x = "Estado",
+       y = "Quantidade de Clientes") +
+  theme_minimal() +
+  coord_flip()
+```
+
+São Paulo ->  possue o maior numero de clientes
+Acre -> possuem o menor numero de clientes na locadora
+
+
+
+# Faturamento por estados
+
+```{r}
+faturamento_estados <- df_clientes %>%
+  inner_join(df_alugueis, by = "id_cliente") %>%
+  inner_join(df_filmes, by = "id_filme") %>% select(estado,preco_aluguel)
+
+
+faturamento_estados <- faturamento_estados %>% group_by(estado) %>% summarise(Total_Valor_Alugueis = sum(preco_aluguel)) %>% arrange(desc(Total_Valor_Alugueis))
+
+
+
+# contrução do gráfico
+
+
+
+ggplot(faturamento_estados, aes(x = reorder(estado, Total_Valor_Alugueis), y = Total_Valor_Alugueis)) +
+  geom_bar(stat = "identity", fill = "#2980b9") +
+  geom_text(aes(label = scales::comma(Total_Valor_Alugueis)), 
+            vjust = 0.5, hjust = -0.1, color = "white", size = 4) +
+  labs(title = "Faturamento por Estado",
+       x = "Estado",
+       y = "Total Faturado") + 
+  theme_minimal(base_size = 14) + 
+  theme(
+    plot.title = element_text(size = 18, face = "bold", color = "#2c3e50"),
+    plot.subtitle = element_text(size = 12, face = "italic", color = "#34495e"),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12, color = "#34495e"),
+    panel.grid.major = element_line(color = "#bdc3c7", linetype = "dotted"),
+    panel.grid.minor = element_blank()
+  ) +
+  coord_flip()
+
+
+```
+
+
+# Distribuiçao sexo dos clientes
+
+```{r}
+
+
+freq_sexo <- df_clientes %>% 
+                          group_by(sexo) %>%
+                                          count()
+colnames(freq_sexo)[2] <- "Ocorrencia"
+
+
+
+ggplot(freq_sexo, aes(x = "", y ="", fill = sexo)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = Ocorrencia), 
+            position = position_stack(vjust = 0.5), size = 5) +
+  labs(title = "Distribuição de Clientes por Sexo", fill = "Sexo") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank())
+```
+# Faturamento por sexo dos clientes
+
+```{r}
+sexo_clientes_faturamento <- df_clientes %>%
+  inner_join(df_alugueis, by = "id_cliente") %>%
+  inner_join(df_filmes, by = "id_filme") %>% select (sexo,preco_aluguel)
+
+
+sexo_clientes_faturamento <- sexo_clientes_faturamento %>% group_by(sexo) %>% summarise(Faturamento = sum(preco_aluguel)) %>% arrange(desc(Faturamento))
+
+
+# grafico pizza para visualizar melhor os valores de cada sexo dos clientes da lcoadora
+
+ggplot(sexo_clientes_faturamento, aes(x = "", y ="", fill = sexo)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = Faturamento), 
+            position = position_stack(vjust = 0.5), size = 5) +
+  labs(title = "Valor Faturamento de alugueis por sexo", fill = "Sexo") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank())
+
+
+```
+
+
+
+# Join entre tabelas
+
+```{r}
+df_clientes_filme <- df_clientes %>%
+  inner_join(df_alugueis, by = "id_cliente") %>%
+  inner_join(df_filmes, by = "id_filme") %>%
+  select(id_cliente, nome_cliente, nota, titulo, genero, duracao, ano_lancamento, preco_aluguel)
+
+
+df_clientes_filme
+```
+
+
+
+# filmes e suas medias de notas
+
+```{r}
+
+# Media de cada filme desconsidando quem n deu nota (NA)
+df_media_notas_filmes <- df_clientes_filme %>% 
+                  group_by(titulo) %>% 
+                                  summarise(media = mean(nota,na.rm=TRUE))
+
+
+
+df_media_notas_filmes
+```
+```{r}
+df_clientes_filme
+```
+# Faturamento de alugueis por filme
+
+```{r}
+faturamento_filmes <- df_clientes_filme %>%
+  group_by(titulo) %>%
+  summarise(Faturamento = sum(as.numeric(preco_aluguel), na.rm = TRUE)) %>%
+  arrange(desc(Faturamento))
+
+faturamento_filmes
+              
+```
+
+
+```{r}
+df_clientes_filme
+```
+# Faturamento total por dias em que os filmes foram alugados
+
+```{r}
+
+
+df_dias_faturamento <- df_clientes %>%
+  inner_join(df_alugueis, by = "id_cliente") %>%
+  inner_join(df_filmes, by = "id_filme") %>% 
+  select(data_aluguel, preco_aluguel) %>%
+  rename(Valor_faturado = preco_aluguel)
+
+
+
+df_faturamento_diario <- df_dias_faturamento %>% 
+  group_by(data_aluguel) %>% 
+  summarise(Total_Faturado_dia = sum(Valor_faturado, na.rm = TRUE)) %>%
+  arrange(desc(Total_Faturado_dia))
+
+
+df_faturamento_diario
+
+
+```
+# Faturamento por ano
+
+```{r}
+df_faturamento_anual <- df_dias_faturamento %>% 
+  mutate(ano = year(data_aluguel)) %>%
+  group_by(ano) %>%
+  summarise(Total_Faturado_Ano = sum(Valor_faturado, na.rm = TRUE))
+
+
+# gráfico para melhorar a visualização
+
+ggplot(df_faturamento_anual, aes(x = factor(ano), y = Total_Faturado_Ano, fill = factor(ano))) +
+  geom_bar(stat = "identity", show.legend = FALSE) +  
+  geom_text(aes(label = scales::label_number(big.mark = ".", decimal.mark = ",")(Total_Faturado_Ano)), 
+            vjust = -0.5, size = 4, fontface = "bold") +  
+  scale_fill_viridis_d() +  
+  scale_y_continuous(labels = scales::label_number(big.mark = ".", decimal.mark = ",")) +  
+  labs(title = "Faturamento Anual da Empresa",
+       x = "Ano",
+       y = "Total Faturado de Aluguéis") +
+  theme_minimal(base_size = 14) +  
+  theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 16),
+        plot.subtitle = element_text(hjust = 0.5, size = 12),
+        axis.text.x = element_text(face = "bold"))
+
+
+```
+
+
+
+```{r}
+df_clientes %>%
+  inner_join(df_alugueis, by = "id_cliente") %>%
+  inner_join(df_filmes, by = "id_filme") 
+```
+
+# Categoria com mais faturamento
+
+```{r}
+categoria_faturamento <- df_clientes %>%
+  inner_join(df_alugueis, by = "id_cliente") %>%
+  inner_join(df_filmes, by = "id_filme") %>% select(genero,preco_aluguel)
+
+
+categoria_faturamento <- categoria_faturamento %>%  group_by(genero) %>% summarise(Total_faturado = sum(preco_aluguel)) %>% arrange(desc(Total_faturado))
+
+# contrução do grpafico
+ggplot(categoria_faturamento, aes(x = reorder(genero, Total_faturado), y = Total_faturado)) +
+  geom_bar(stat = "identity", fill = "#2c3e50") +
+  geom_text(aes(label = scales::comma(Total_faturado)), 
+            vjust = 0.5, hjust = -0.1, color = "white", size = 4) +
+  labs(title = "Faturamento por Gênero",
+       x = "Gênero",
+       y = "Total Faturado (R$)")+
+  theme_minimal(base_size = 14) + 
+  theme(
+    plot.title = element_text(size = 18, face = "bold", color = "#2c3e50"),
+    plot.subtitle = element_text(size = 12, face = "italic", color = "#34495e"),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12, color = "#34495e"),
+    panel.grid.major = element_line(color = "#bdc3c7", linetype = "dotted"),
+    panel.grid.minor = element_blank()
+  ) +
+  coord_flip()
+```
+
+
+
+
+# Atores e suas quantidades de filmes em que participou ordenados pela coluna Qtd_Atuacoes
+
+
+```{r}
+df_atuacoes
+```
+```{r}
+df_atores_atuacoes <- df_atores %>% inner_join(df_atuacoes, by="id_ator")
+
+df_atores_atuacoes_filmes <- df_atores_atuacoes %>% inner_join(df_filmes, by="id_filme")
+
+df_atores_atuacoes_filmes
+```
+
+```{r}
+qtd_atuacoes_atores <- df_atores_atuacoes_filmes %>% group_by(nome_ator) %>% count()
+
+colnames(qtd_atuacoes_atores)[2] <- "Qtd_Atuacoes"
+
+qtd_atuacoes_atores <- qtd_atuacoes_atores %>% group_by(nome_ator) %>% arrange(desc(Qtd_Atuacoes))
+qtd_atuacoes_atores
+```
+
+
+
