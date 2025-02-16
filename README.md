@@ -10,4 +10,4 @@
 ### Para análise do seu negócio, entre em contato pelo linkedin -> https://www.linkedin.com/in/mateus-leite-378190236
 
 
-### Algumas fotos foram anexadas junto a main, para auxiliar de maneira rápida, de como o projeto esta dentro do rstudio, para agilixar a compreensão dos scripts usados (script completo esta no arquivo do projeto -> Projeto.Rmd)
+### Algumas fotos foram anexadas junto a main, para auxiliar de maneira rápida, de como o projeto esta dentro do rstudio, para agilizar a compreensão dos scripts usados (script completo esta no arquivo do projeto -> Projeto.Rmd)
